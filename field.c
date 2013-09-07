@@ -72,11 +72,11 @@ int occupied(field_t f, int row, int col) {
 	return f.occupied[row * f.wid + col];
 }
 
-void brand(field_t f, int row, int col) {
+void brand(field_t f, int row, int col, int color) {
 	if ((row < 0) || (row >= f.hei) || (col < 0) || (col >= f.wid)) {
 		return;
 	}
-	f.occupied[row * f.wid + col] = 1;
+	f.occupied[row * f.wid + col] = color;
 }
 
 void draw_field(field_t f) {
@@ -85,31 +85,34 @@ void draw_field(field_t f) {
 
 	// top
 	move(yorigin - 1, xorigin - 1);
-	addch('+');
+	addch(ACS_ULCORNER);
 	for (int col = 0; col < f.wid; col++) {
-		addch('-');
+		addch(ACS_HLINE);
 	}
-	addch('+');
+	addch(ACS_URCORNER);
 
 	// middle
 	for (int row = 0; row < f.hei; row++) {
 		move(yorigin + row, xorigin - 1);
-		addch('|');
+		addch(ACS_VLINE);
 		for (int col = 0; col < f.wid; col++) {
-			if (occupied(f, row, col)) {
-				addch('#');
+			int color = occupied(f, row, col);
+			if (color) {
+				attron(COLOR_PAIR(color));
+				addch(' ' | A_REVERSE);
+				attron(COLOR_PAIR(1));
 			} else {
 				addch(' ');
 			}
 		}
-		addch('|');
+		addch(ACS_VLINE);
 	}
 
 	// bottom
 	move(yorigin + f.hei, xorigin - 1);
-	addch('+');
+	addch(ACS_LLCORNER);
 	for (int col = 0; col < f.wid; col++) {
-		addch('-');
+		addch(ACS_HLINE);
 	}
-	addch('+');
+	addch(ACS_LRCORNER);
 }

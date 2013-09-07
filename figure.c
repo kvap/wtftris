@@ -16,15 +16,21 @@ void draw_figure(field_t field, figure_t figure) {
 	int xorigin = COLS/2 - field.wid/2;
 	for (int row = 0; row < 4; row++) {
 		for (int col = 0; col < 4; col++) {
-			if (shape_test(figure.shape, figure.orientation, row, col)) {
+			int color = shape_test(
+				figure.shape, figure.orientation,
+				row, col
+			);
+			if (color) {
+				attron(COLOR_PAIR(color));
 				mvaddch(
 					yorigin + figure.y + row,
 					xorigin + figure.x + col,
-					'%'
+					' ' | A_REVERSE
 				);
 			}
 		}
 	}
+	attron(COLOR_PAIR(1));
 }
 
 int figure_hits_field(field_t field, figure_t figure) {
@@ -68,16 +74,17 @@ int move_figure(field_t field, figure_t *figure, int dx, int dy, int dorient) {
 void brand_figure(field_t field, figure_t figure) {
 	for (int row = 0; row < 4; row++) {
 		for (int col = 0; col < 4; col++) {
-			int shape_is_here = shape_test(
+			int color = shape_test(
 				figure.shape,
 				figure.orientation,
 				row, col
 			);
-			if (shape_is_here) {
+			if (color) {
 				brand(
 					field,
 					figure.y + row,
-					figure.x + col
+					figure.x + col,
+					color
 				);
 			}
 		}
