@@ -37,11 +37,17 @@ int *shapes[] = {
 };
 int shapes_count = sizeof(shapes) / sizeof(shapes[0]);
 
+int stats[7];
+
 figure_t gen_figure(int y, int x) {
 	figure_t figure;
 	figure.x = x;
 	figure.y = y;
-	figure.shape = shapes[rand() % shapes_count];
+
+	int choice = rand() % shapes_count;
+	stats[choice]++; 
+	figure.shape = shapes[choice];
+
 	figure.orientation = 0;
 	return figure;
 }
@@ -61,8 +67,49 @@ float now_s() {
 	}
 }
 
+void init_stats() {
+	for (int i = 0; i < sizeof(stats) / sizeof(stats[0]); i++) {
+		stats[i] = 0;
+	}
+}
+
+void show_stats() {
+	for (int i = 0; i < sizeof(stats) / sizeof(stats[0]); i++) {
+		attron(COLOR_PAIR(i + 1));
+		mvprintw(4 + i, 1, "%d      ", stats[i]);
+		attron(COLOR_PAIR(1));
+	}
+}
+
+#define SCORES_FILENAME "wtftris.save"
+int get_hiscore() {
+	FILE *f = fopen(SCORES_FILENAME, "r");
+	if (!f) {
+		return 0;
+	}
+	int score;
+	int highest = 0;
+	while (fscanf(f, "%d\n", &score) != EOF) {
+		if (score > highest) {
+			highest = score;
+		}
+	}
+	fclose(f);
+	return highest;
+}
+
+void put_hiscore(int score) {
+	FILE *f = fopen(SCORES_FILENAME, "a");
+	if (f) {
+		fprintf(f, "%d\n", score);
+		fclose(f);
+	}
+}
+
 int main() {
 	signal(SIGINT, finish);
+
+	srand(time(NULL));
 
 	initscr();
 	keypad(stdscr, TRUE);
@@ -81,16 +128,25 @@ int main() {
 	init_pair(7, COLOR_CYAN, COLOR_BLACK);
 	attron(COLOR_PAIR(1));
 
+	init_stats();
+
 	field_t field = create_field(FIELD_HEI, FIELD_WID);
 	figure_t figure = gen_figure(0, FIELD_WID/2 - 2);
 
 	int score = 0;
+	int hiscore = get_hiscore();
 
 	int gameover = 0;
 	float t = now_s();
 	while (1) {
 		usleep(100);
 		if (gameover) {
+			put_hiscore(score);
+
+			if (score > hiscore) {
+				hiscore = score;
+			}
+
 			nodelay(stdscr, FALSE);
 			mvprintw(1, 1, "game over, press any key to restart or 'q' to exit");
 			refresh();
@@ -142,6 +198,7 @@ int main() {
 					bonus *= 1000;
 				}
 				score += bonus;
+
 				figure = gen_figure(0, FIELD_WID/2 - 2);
 				if (figure_hits_field(field, figure)) {
 					gameover = 1;
@@ -154,7 +211,13 @@ int main() {
 		draw_field(field);
 		draw_figure(field, figure);
 
-		mvprintw(2, 1, "score: %d        ", score);
+		if (score > hiscore) {
+			mvprintw(2, 1, "score: %d (record)        ", score);
+		} else {
+			mvprintw(2, 1, "score: %d < hiscore: %d        ", score, hiscore);
+		}
+
+		show_stats();
 
 		refresh();
 	}
