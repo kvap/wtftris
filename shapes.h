@@ -13,12 +13,12 @@
 
 int shape_test(int *shape, int orientation, int row, int col);
 
-int shape_o[64];
-int shape_s[64];
-int shape_z[64];
-int shape_l[64];
-int shape_j[64];
-int shape_t[64];
-int shape_i[64];
+extern int shape_o[64];
+extern int shape_s[64];
+extern int shape_z[64];
+extern int shape_l[64];
+extern int shape_j[64];
+extern int shape_t[64];
+extern int shape_i[64];
 
 #endif
